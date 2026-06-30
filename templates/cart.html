@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}My Cart - ShopVerse{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-6">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Shopping Cart</h1>
+
+    {% if cart_items %}
+        <div class="space-y-4">
+            {% for item in cart_items %}
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Checkbox to Select/Unselect -->
+                    <form method="POST" action="{{ url_for('update_cart') }}">
+                        <input type="hidden" name="cart_id" value="{{ item.ShoppingCartID }}">
+                        <input type="hidden" name="action" value="toggle">
+                        <input type="checkbox" onChange="this.form.submit()" class="w-5 h-5 text-blue-600 cursor-pointer" {% if item.IsSelectedForPurchase %}checked{% endif %}>
+                    </form>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">{{ item.ProductName }}</h3>
+                        <p class="text-sm text-gray-500">{{ item.CurrencySymbol }}{{ item.Price }} each</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-6">
+                    
+                    <!-- THE YELLOW PILL BUTTON -->
+                    <div class="flex items-center border-2 border-yellow-400 rounded-full px-3 py-1 bg-white shadow-sm">
+                        
+                        <form method="POST" action="{{ url_for('update_cart') }}" class="m-0">
+                            <input type="hidden" name="cart_id" value="{{ item.ShoppingCartID }}">
+                            <input type="hidden" name="action" value="{% if item.Quantity == 1 %}delete{% else %}decrease{% endif %}">
+                            <button type="submit" class="text-gray-800 hover:text-red-600 font-bold px-2 text-lg">
+                                {% if item.Quantity == 1 %} 🗑️ {% else %} − {% endif %}
+                            </button>
+                        </form>
+
+                        <span class="px-4 font-bold text-gray-900 text-lg border-x border-gray-200">
+                            {{ item.Quantity }}
+                        </span>
+
+                        <form method="POST" action="{{ url_for('update_cart') }}" class="m-0">
+                            <input type="hidden" name="cart_id" value="{{ item.ShoppingCartID }}">
+                            <input type="hidden" name="action" value="increase">
+                            <button type="submit" class="text-gray-800 hover:text-green-600 font-bold px-2 text-xl" 
+                                {% if item.Quantity >= item.StockQuantity %}disabled title="Max stock reached"{% endif %}>
+                                +
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="text-right w-24">
+                        <p class="font-bold text-lg text-gray-900">{{ item.CurrencySymbol }}{{ item.Price * item.Quantity }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-8 flex justify-between items-center bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <div>
+                <p class="text-gray-500">Selected Items Total:</p>
+                <h2 class="text-3xl font-extrabold text-gray-900">₹{{ total_value }}</h2>
+            </div>
+            <button onclick="alert('Checkout coming soon!')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-md text-lg transition duration-200">
+                Proceed to Buy
+            </button>
+        </div>
+
+    {% else %}
+        <div class="text-center py-12">
+            <h2 class="text-xl text-gray-500 mb-4">Your cart is empty!</h2>
+            <a href="{{ url_for('home') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-bold transition">Start Shopping</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
