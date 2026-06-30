@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}{{ mode }} {{ table_label }}{% endblock %}
+
+{% block content %}
+  <section class="page-heading row-heading">
+    <div>
+      <h1>{{ mode }} {{ table_label }}</h1>
+      <p>{{ table_name }}</p>
+    </div>
+    <a class="button secondary" href="{{ url_for('table_list', table_name=table_name) }}">Back</a>
+  </section>
+
+  <form class="form-panel" method="post">
+    {% for column in columns %}
+      <label>
+        <span>{{ column.COLUMN_NAME }}</span>
+        
+        {% if column.DATA_TYPE == "text" or column.DATA_TYPE == "json" %}
+          <textarea name="{{ column.COLUMN_NAME }}" {% if column.IS_NULLABLE == "NO" %}required{% endif %}>{{ row.get(column.COLUMN_NAME, "") }}</textarea>
+        
+        <!-- NEW: Foreign Key Dropdowns -->
+        {% elif fk_options is defined and column.COLUMN_NAME in fk_options %}
+          <select name="{{ column.COLUMN_NAME }}" {% if column.IS_NULLABLE == "NO" %}required{% endif %}>
+            {% if column.IS_NULLABLE == "YES" %}<option value="">-- Select --</option>{% endif %}
+            {% for opt in fk_options[column.COLUMN_NAME] %}
+              <option value="{{ opt.id }}" {% if row.get(column.COLUMN_NAME) == opt.id %}selected{% endif %}>{{ opt.text }}</option>
+            {% endfor %}
+          </select>
+
+        {% elif column.DATA_TYPE == "enum" %}
+          <!-- Dropdown for ENUMs (Roles, Gender, Payment Mode) -->
+          <select name="{{ column.COLUMN_NAME }}" {% if column.IS_NULLABLE == "NO" %}required{% endif %}>
+            {% if column.IS_NULLABLE == "YES" %}<option value="">-- Select --</option>{% endif %}
+            {% for val in column.ENUM_VALUES %}
+              <option value="{{ val }}" {% if row.get(column.COLUMN_NAME) == val %}selected{% endif %}>{{ val }}</option>
+            {% endfor %}
+          </select>
+
+        {% elif column.DATA_TYPE == "date" %}
+          <!-- Calendar picker for Dates (DoB) -->
+          <input type="date" name="{{ column.COLUMN_NAME }}" value="{{ row.get(column.COLUMN_NAME, '') }}" {% if column.IS_NULLABLE == "NO" %}required{% endif %}>
+
+        {% elif column.DATA_TYPE in ["int", "tinyint", "decimal"] %}
+          <input
+            type="number"
+            step="{% if column.DATA_TYPE == 'decimal' %}0.01{% else %}1{% endif %}"
+            name="{{ column.COLUMN_NAME }}"
+            value="{{ row.get(column.COLUMN_NAME, column.COLUMN_DEFAULT if column.COLUMN_DEFAULT is not none else '') }}"
+            {% if column.IS_NULLABLE == "NO" %}required{% endif %}
+          >
+          
+        {% else %}
+          <input
+            type="text"
+            name="{{ column.COLUMN_NAME }}"
+            value="{{ row.get(column.COLUMN_NAME, column.COLUMN_DEFAULT if column.COLUMN_DEFAULT is not none else '') }}"
+            {% if column.IS_NULLABLE == "NO" %}required{% endif %}
+          >
+        {% endif %}
+      </label>
+    {% endfor %}
+    
+    <button class="button" type="submit">{{ mode }}</button>
+  </form>
+{% endblock %}

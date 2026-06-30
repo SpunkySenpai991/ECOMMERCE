@@ -1,33 +1,30 @@
-{% extends "base.html" %}
+{% extends "store_base.html" %}
 {% block title %}My Cart - ShopVerse{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-6">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Shopping Cart</h1>
+<div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200 mt-6">
+    <h1 class="text-2xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
 
     {% if cart_items %}
-        <div class="space-y-4">
+        <div class="space-y-6">
             {% for item in cart_items %}
-            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 pb-6">
                 
-                <div class="flex items-center space-x-4">
-                    <!-- Checkbox to Select/Unselect -->
+                <div class="flex items-center space-x-4 mb-4 md:mb-0">
                     <form method="POST" action="{{ url_for('update_cart') }}">
                         <input type="hidden" name="cart_id" value="{{ item.ShoppingCartID }}">
                         <input type="hidden" name="action" value="toggle">
-                        <input type="checkbox" onChange="this.form.submit()" class="w-5 h-5 text-blue-600 cursor-pointer" {% if item.IsSelectedForPurchase %}checked{% endif %}>
+                        <input type="checkbox" onChange="this.form.submit()" class="w-5 h-5 text-indigo-600 cursor-pointer rounded" {% if item.IsSelectedForPurchase %}checked{% endif %}>
                     </form>
                     <div>
-                        <h3 class="text-lg font-bold text-gray-800">{{ item.ProductName }}</h3>
+                        <h3 class="text-lg font-semibold text-gray-800">{{ item.ProductName }}</h3>
                         <p class="text-sm text-gray-500">{{ item.CurrencySymbol }}{{ item.Price }} each</p>
                     </div>
                 </div>
 
                 <div class="flex items-center space-x-6">
-                    
-                    <!-- THE YELLOW PILL BUTTON -->
+                    <!-- THE YELLOW PILL BUTTON (As requested) -->
                     <div class="flex items-center border-2 border-yellow-400 rounded-full px-3 py-1 bg-white shadow-sm">
-                        
                         <form method="POST" action="{{ url_for('update_cart') }}" class="m-0">
                             <input type="hidden" name="cart_id" value="{{ item.ShoppingCartID }}">
                             <input type="hidden" name="action" value="{% if item.Quantity == 1 %}delete{% else %}decrease{% endif %}">
@@ -58,20 +55,19 @@
             {% endfor %}
         </div>
 
-        <div class="mt-8 flex justify-between items-center bg-gray-50 p-6 rounded-lg border border-gray-200">
-            <div>
+        <div class="mt-8 flex flex-col md:flex-row justify-between items-center bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <div class="mb-4 md:mb-0 text-center md:text-left">
                 <p class="text-gray-500">Selected Items Total:</p>
                 <h2 class="text-3xl font-extrabold text-gray-900">₹{{ total_value }}</h2>
             </div>
-            <button onclick="alert('Checkout coming soon!')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-md text-lg transition duration-200">
+            <button onclick="alert('Checkout coming soon!')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-md text-lg transition duration-200 w-full md:w-auto">
                 Proceed to Buy
             </button>
         </div>
-
     {% else %}
         <div class="text-center py-12">
             <h2 class="text-xl text-gray-500 mb-4">Your cart is empty!</h2>
-            <a href="{{ url_for('home') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-bold transition">Start Shopping</a>
+            <a href="{{ url_for('home') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-bold transition">Start Shopping</a>
         </div>
     {% endif %}
 </div>

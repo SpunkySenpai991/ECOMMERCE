@@ -1,122 +1,37 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}ShopVerse Store{% endblock %}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Management{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('management_home') }}">E-Com Management</a>
+      <nav>
+        {% if session.get('user_id') %}
+          <span style="margin-right: 15px; color: #6b7280;">
+            Hello, <strong>{{ session.get('name') }}</strong> ({{ session.get('role') }})
+          </span>
+          <a href="{{ url_for('management_home') }}" style="margin-right: 15px;">Dashboard</a>
+          <a href="{{ url_for('logout') }}" class="small-button secondary" style="color: white;">Logout</a>
+        {% endif %}
+      </nav>
+    </header>
 
-  <nav class="bg-gray-900 shadow-md relative z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        
-        <a href="{{ url_for('home') }}" class="flex-shrink-0 text-white font-bold text-xl tracking-wide">
-          🛍️ ShopVerse
-        </a>
-
-        <div class="hidden md:flex flex-1 items-center justify-center px-4">
-          
-          <div class="relative group/main h-16 flex items-center">
-            <button class="bg-gray-800 text-white px-4 py-2 rounded-l-md border border-gray-700 hover:bg-gray-700 focus:outline-none flex items-center">
-              Categories <span class="ml-2 text-xs">▼</span>
-            </button>
-            
-            <!-- Hover bug fixed: Removed margin-top, making menus stick together perfectly -->
-            <div class="absolute left-0 top-16 w-64 bg-white shadow-xl rounded-b-md hidden group-hover/main:block border border-gray-200 z-50">
-              <ul class="py-2">
-                {% for cat_id, cat_data in categories.items() %}
-                  <li class="relative group/sub">
-                    <!-- NEW: Clickable Main Category! -->
-                    <a href="{{ url_for('home', main_cat=cat_id) }}" class="block px-4 py-2 text-sm font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex justify-between items-center">
-                      {{ cat_data.name }} <span>▶</span>
-                    </a>
-                    
-                    <div class="absolute left-full top-0 w-56 bg-white shadow-xl rounded-md hidden group-hover/sub:block border border-gray-200">
-                      <ul class="py-2">
-                        {% for subcat_id, subcat_data in cat_data.subcats.items() %}
-                          <li class="relative group/subsub">
-                            <!-- NEW: Clickable Sub Category! -->
-                            <a href="{{ url_for('home', sub_cat=subcat_id) }}" class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex justify-between items-center">
-                              {{ subcat_data.name }} <span>▶</span>
-                            </a>
-                            
-                            <div class="absolute left-full top-0 w-48 bg-white shadow-xl rounded-md hidden group-hover/subsub:block border border-gray-200">
-                              <ul class="py-2">
-                                {% for ssc in subcat_data.subsubcats %}
-                                  <li>
-                                    <!-- Clickable Sub Sub Category -->
-                                    <a href="{{ url_for('home', ss_cat=ssc.id) }}" class="block px-4 py-2 text-sm text-gray-500 hover:bg-blue-50 hover:text-blue-600">
-                                      {{ ssc.name }}
-                                    </a>
-                                  </li>
-                                {% endfor %}
-                              </ul>
-                            </div>
-                          </li>
-                        {% endfor %}
-                      </ul>
-                    </div>
-                  </li>
-                {% endfor %}
-              </ul>
-            </div>
+    <main class="page">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="messages">
+            {% for category, message in messages %}
+              <div class="message {{ category }}">{{ message }}</div>
+            {% endfor %}
           </div>
+        {% endif %}
+      {% endwith %}
 
-          <form class="flex w-full max-w-xl" action="{{ url_for('home') }}" method="GET">
-            <input type="text" name="search" placeholder="Search products, brands..." value="{{ search_query or '' }}"
-                   class="w-full px-4 py-2 border-y border-r border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-900 bg-white">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-r-md font-medium text-sm transition duration-150">
-              Search
-            </button>
-          </form>
-        </div>
-
-        <div class="flex items-center space-x-2">
-            
-          <!-- NEW: Language Dropdown -->
-          <div class="relative group/lang h-16 flex items-center">
-            <button class="text-gray-300 hover:text-white px-2 py-2 text-sm font-medium flex items-center">
-              🌐 EN <span class="ml-1 text-xs">▼</span>
-            </button>
-            <div class="absolute right-0 top-16 w-32 bg-white shadow-lg rounded-b-md hidden group-hover/lang:block border border-gray-200">
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-bold">EN - English</a>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-500 hover:bg-gray-100">HI - Hindi</a>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-500 hover:bg-gray-100">MR - Marathi</a>
-            </div>
-          </div>
-
-          {% if session.get('customer_id') %}
-            <span class="text-gray-300 text-sm hidden lg:block mr-2">Hello, <strong class="text-white">{{ session.get('customer_name') }}</strong></span>
-            <a href="{{ url_for('view_cart') }}" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-md text-sm font-bold transition">
-              🛒 Cart ({{ cart_count }})
-            </a>
-            <a href="{{ url_for('logout') }}" class="text-gray-400 hover:text-red-500 px-3 py-2 text-sm font-medium transition">Logout</a>
-          {% else %}
-            <a href="{{ url_for('login') }}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Login</a>
-            <a href="{{ url_for('register') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">Sign Up</a>
-          {% endif %}
-        </div>
-        
-      </div>
-    </div>
-  </nav>
-
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="mb-6 space-y-2">
-          {% for category, message in messages %}
-            <div class="px-4 py-3 rounded-md shadow-sm border {% if category == 'error' %}bg-red-50 border-red-200 text-red-700{% else %}bg-green-50 border-green-200 text-green-700{% endif %}">
-              {{ message }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-
-    {% block content %}{% endblock %}
-  </main>
-</body>
+      {% block content %}{% endblock %}
+    </main>
+  </body>
 </html>

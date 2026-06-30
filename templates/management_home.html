@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Management Dashboard{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <h1>{{ session.get('role') }} Dashboard</h1>
+    <p>Welcome, {{ session.get('name') }}. Here are the modules you have access to.</p>
+  </section>
+
+  <!-- Loop through our new logical categories -->
+  {% for category_name, tables_in_category in table_categories.items() %}
+    
+    {# First, we check if the logged-in user has permission for ANY table in this category #}
+    {% set accessible_tables = [] %}
+    {% for tbl in tables_in_category %}
+      {% if tbl in role_permissions[session.get('role')] %}
+        {% set _ = accessible_tables.append(tbl) %}
+      {% endif %}
+    {% endfor %}
+
+    {# Only draw the Category section if they have access to at least one table in it #}
+    {% if accessible_tables|length > 0 %}
+      <div style="margin-top: 30px; margin-bottom: 10px;">
+        <h2 style="font-size: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">{{ category_name }}</h2>
+      </div>
+      
+      <section class="table-grid">
+        {% for table_name in accessible_tables %}
+          <a class="table-card" href="{{ url_for('table_list', table_name=table_name) }}">
+            <span>{{ all_tables[table_name] }}</span>
+            <small>{{ table_name }}</small>
+          </a>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+  {% else %}
+    <div class="message error">You currently do not have access to any modules. Please contact an Admin.</div>
+  {% endfor %}
+{% endblock %}
