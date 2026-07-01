@@ -1,3 +1,5 @@
+
+<!--user fr-->
 {% extends "store_base.html" %}
 {% block title %}ShopVerse{% endblock %}
 
@@ -23,8 +25,8 @@
       
       <a href="{{ url_for('product_detail', vp_id=p.VendorProductID) }}" class="block">
           <div class="bg-gray-100 border-b border-gray-100 h-56 overflow-hidden flex items-center justify-center relative">
-            <img src="https://placehold.co/600x400/f8fafc/1e293b?font=inter&text={{ p.ProductName|urlencode }}" 
-                 alt="{{ p.ProductName }}" class="w-full h-full object-cover">
+            <img src="{% if p.MainImage %}{{ p.MainImage }}{% else %}https://placehold.co/600x400/f8fafc/1e293b?font=inter&text={{ p.ProductName|urlencode }}{% endif %}" 
+     alt="{{ p.ProductName }}" class="w-full h-full object-cover">
           </div>
           <div class="p-5 flex-grow flex flex-col">
             <p class="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-1">{{ p.BrandName }}</p>

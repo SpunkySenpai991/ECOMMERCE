@@ -1,3 +1,5 @@
+
+<!--user fr-->
 {% extends "store_base.html" %}
 {% block title %}{{ p.ProductName }} - ShopVerse{% endblock %}
 
@@ -11,11 +13,20 @@
 
     <div class="grid grid-cols-1 md:grid-cols-12 gap-10">
         <div class="md:col-span-6">
-            <div class="border border-gray-100 rounded-lg overflow-hidden bg-gray-50">
-                <img src="https://placehold.co/800x800/f8fafc/1e293b?font=inter&text={{ p.ProductName|urlencode }}" 
-                     class="w-full h-auto object-cover" alt="{{ p.ProductName }}">
-            </div>
-        </div>
+    <div class="border border-gray-100 rounded-lg overflow-hidden bg-gray-50">
+        <img src="{% if p.MainImage %}{{ p.MainImage }}{% else %}https://placehold.co/800x800/f8fafc/1e293b?font=inter&text={{ p.ProductName|urlencode }}{% endif %}" 
+             class="w-full h-auto object-cover" alt="{{ p.ProductName }}">
+    </div>
+    
+    <!-- Mini Gallery for additional images -->
+    {% if product_images and product_images|length > 1 %}
+    <div class="flex gap-4 mt-4 overflow-x-auto pb-2">
+        {% for img in product_images %}
+            <img src="{{ img.ImagePath }}" class="w-20 h-20 object-cover border border-gray-200 rounded-md cursor-pointer hover:border-indigo-600 transition">
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
 
         <div class="md:col-span-6 flex flex-col">
             <p class="text-sm font-bold text-indigo-600 uppercase tracking-widest mb-2">{{ p.BrandName }}</p>

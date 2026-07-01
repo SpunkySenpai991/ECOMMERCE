@@ -144,7 +144,7 @@ def fetch_rows(table_name, include_deleted=False):
     columns = get_columns(table_name)
     has_deleted = any(column["COLUMN_NAME"] == "IsDeleted" for column in columns)
     where = "" if include_deleted or not has_deleted else "WHERE IsDeleted = 0"
-    sql = f"SELECT * FROM `{db_table_name}` {where} ORDER BY 1 DESC LIMIT 100"
+    sql = f"SELECT * FROM `{db_table_name}` {where} ORDER BY 1 ASC LIMIT 100"
     with get_connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(sql)
@@ -386,9 +386,12 @@ def inject_globals():
 @app.route("/")
 def home():
     search_query, main_cat, sub_cat, ss_cat = request.args.get('search', '').strip(), request.args.get('main_cat'), request.args.get('sub_cat'), request.args.get('ss_cat')
+    
+    # ADDED: Subquery to fetch the MainImage
     sql = """
         SELECT vp.VendorProductID, vp.Price, vp.StockQuantity, p.ProductName, p.ProductDescription, 
-               b.BrandName, c.CompanyName, u.FullName AS VendorName, cur.CurrencySymbol
+               b.BrandName, c.CompanyName, u.FullName AS VendorName, cur.CurrencySymbol,
+               (SELECT ImagePath FROM ProductImages pi WHERE pi.ProductID = p.ProductID AND pi.IsDeleted = 0 ORDER BY (ImageType='main') DESC, ImageOrder ASC LIMIT 1) AS MainImage
         FROM VendorProduct vp
         JOIN Product p ON vp.ProductID = p.ProductID
         JOIN ProductSubSubCategory ssc ON p.ProductSubSubCategoryID = ssc.ProductSubSubCategoryID
@@ -414,11 +417,14 @@ def home():
             
     return render_template("index.html", products=vendor_products, search_query=search_query)
 
+
 @app.route("/product/<int:vp_id>")
 def product_detail(vp_id):
+    # ADDED: p.ProductID and MainImage subquery
     sql_prod = """
-        SELECT vp.VendorProductID, vp.Price, vp.StockQuantity, p.ProductName, p.Attributes_JSON,
-               p.ProductDescription, b.BrandName, u.FullName AS VendorName, cur.CurrencySymbol
+        SELECT vp.VendorProductID, vp.Price, vp.StockQuantity, p.ProductID, p.ProductName, p.Attributes_JSON,
+               p.ProductDescription, b.BrandName, u.FullName AS VendorName, cur.CurrencySymbol,
+               (SELECT ImagePath FROM ProductImages pi WHERE pi.ProductID = p.ProductID AND pi.IsDeleted = 0 ORDER BY (ImageType='main') DESC, ImageOrder ASC LIMIT 1) AS MainImage
         FROM VendorProduct vp
         JOIN Product p ON vp.ProductID = p.ProductID
         JOIN Model m ON p.ModelID = m.ModelID
@@ -444,6 +450,10 @@ def product_detail(vp_id):
                 return redirect(url_for('home'))
             cursor.execute(sql_reviews, (vp_id,))
             reviews = cursor.fetchall()
+            
+            # ADDED: Fetch all images for the product gallery
+            cursor.execute("SELECT ImagePath FROM ProductImages WHERE ProductID = %s AND IsDeleted = 0 ORDER BY (ImageType='main') DESC, ImageOrder ASC", (product['ProductID'],))
+            product_images = cursor.fetchall()
 
     product['Specs'] = {}
     if product['Attributes_JSON']:
@@ -451,7 +461,8 @@ def product_detail(vp_id):
         except: pass
         
     avg_rating = round(sum(r['ProductRating'] for r in reviews if r['ProductRating']) / len(reviews), 1) if reviews else 0
-    return render_template("product.html", p=product, reviews=reviews, avg_rating=avg_rating)
+    # ADDED: Pass product_images to the template
+    return render_template("product.html", p=product, reviews=reviews, avg_rating=avg_rating, product_images=product_images)
 
 @app.route("/cart/add", methods=["POST"])
 @customer_required
